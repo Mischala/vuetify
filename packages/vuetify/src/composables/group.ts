@@ -1,4 +1,4 @@
-import type { Ref, InjectionKey, SetupContext } from 'vue'
+import { Ref, InjectionKey, SetupContext, unref } from 'vue'
 import { ref, provide, inject, computed, onBeforeUnmount } from 'vue'
 import { wrapInArray } from '../util/helpers'
 import { useProxiedModel } from './proxiedModel'
@@ -20,11 +20,10 @@ export interface GroupProvide {
   items: Ref<GroupItem[]>
 }
 
-export function useItem (
-  props: { value?: any, disabled?: boolean, active?: boolean },
+export function useGroupItem (
+  props: { value?: any },
   injectKey: InjectionKey<GroupProvide>
 ) {
-  console.log('useItem')
   const group = inject(injectKey)
   const value = computed(() => props.value)
   const id = uuid()
@@ -76,12 +75,13 @@ const getValues = (items: GroupItem[], ids: any[]) => {
   return values
 }
 
+interface GroupProps { [key: string]: any, modelValue?: any, multiple?: boolean, mandatory?: boolean, max?: number }
+
 export function useGroup (
-  props: { modelValue?: any, multiple?: boolean, mandatory?: boolean, max?: number, returnValues?: boolean },
+  props: GroupProps,
   context: SetupContext<any>,
   injectKey: InjectionKey<GroupProvide>
 ) {
-  console.log('useGroup')
   const items = ref([]) as Ref<GroupItem[]>
   const selected = useProxiedModel(
     props,
@@ -102,16 +102,14 @@ export function useGroup (
   function register (item: GroupItem) {
     items.value.push(item)
 
-    // If no value provided and mandatory,
-    // assign first registered item
+    // If mandatory and nothing is selected,
+    // then select this item
     if (props.mandatory && !selected.value.length) {
       selected.value = [item.id]
     }
   }
 
   function unregister (id: string) {
-    console.log('unregistering', id)
-
     selected.value = selected.value.filter(v => v !== id)
 
     if (props.mandatory && !selected.value.length) {
@@ -121,8 +119,7 @@ export function useGroup (
     items.value = items.value.filter(item => item.id !== id)
   }
 
-  function updateValue (id: string) {
-    console.log('update', id)
+  function toggle (id: string) {
     if (props.multiple) {
       const internalValue = selected.value.slice()
       const index = internalValue.findIndex(v => v === id)
@@ -159,7 +156,7 @@ export function useGroup (
 
   function getOffsetId (offset: number) {
     // getting an offset from selected value obviously won't work with multiple values
-    if (props.multiple) throw new Error('!!!')
+    if (props.multiple) throw new Error('prev/next/step methods are not supported when using "multiple" prop')
 
     // If there is nothing selected, then next value is first item
     if (!selected.value.length) return items.value[0].id
@@ -176,7 +173,7 @@ export function useGroup (
     unregister,
     selected,
     items,
-    toggle: updateValue,
+    toggle,
     prev: () => selected.value = [getOffsetId(items.value.length - 1)],
     next: () => selected.value = [getOffsetId(1)],
     step: (steps: number) => selected.value = [getOffsetId(steps)],

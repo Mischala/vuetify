@@ -76,12 +76,26 @@
       <button @click="insert">insert</button>
       <button @click="remove">remove</button>
     </v-group>
+
+    <v-group multiple :max="2">
+      multiple, max limit 2
+      <v-item value="hello">hello</v-item>
+      <v-item value="world">world</v-item>
+      <v-item value="foo">foo</v-item>
+      <v-item value="bar">bar</v-item>
+    </v-group>
+
+    <v-checkbox-group v-model="checkboxes">
+      <v-checkbox value="one" />
+      <v-checkbox value="two" />
+      {{ checkboxes }}
+    </v-checkbox-group>
   </div>
 </template>
 
 <script lang="ts">
-  import { useGroup, useItem } from '../src/composables/group'
-  import { h, defineComponent, ref, watch } from 'vue'
+  import { useGroup, useGroupItem } from '../src/composables/group'
+  import { h, defineComponent, ref, watch, reactive, computed, toRefs } from 'vue'
 
   const VGroup = defineComponent({
     name: 'VGroup',
@@ -92,6 +106,9 @@
       },
       multiple: Boolean,
       mandatory: Boolean,
+      max: {
+        type: Number,
+      },
     },
     setup (props, context) {
       useGroup(props, context, Symbol.for('foo'))
@@ -110,7 +127,7 @@
       },
     },
     setup (props, context) {
-      const item = useItem(props, Symbol.for('foo'))
+      const item = useGroupItem(props, Symbol.for('foo'))
 
       return () => h('div', {
         class: {
@@ -147,12 +164,41 @@
       value: String,
     },
     setup (props, context) {
-      const item = useItem(props, Symbol.for('bar'))
+      const item = useGroupItem(props, Symbol.for('bar'))
       return () => h('div', {
         class: {
           selected: item.isSelected.value,
         },
       }, [context.slots.default?.()])
+    },
+  })
+
+  const VCheckboxGroup = defineComponent({
+    name: 'VCheckboxGroup',
+    props: {
+      modelValue: Array,
+    },
+    setup (props, context) {
+      useGroup(reactive({ ...toRefs(props), multiple: true }), context, Symbol.for('checkbox-group'))
+
+      return () => h('div', {
+      }, [context.slots.default?.()])
+    },
+  })
+
+  const VCheckbox = defineComponent({
+    name: 'VCheckbox',
+    props: {
+      value: [String, Number],
+    },
+    setup (props, context) {
+      const item = useGroupItem(props, Symbol.for('checkbox-group'))
+
+      return () => h('input', {
+        type: 'checkbox',
+        checked: item.isSelected.value,
+        onChange: () => item.toggle(),
+      })
     },
   })
 
@@ -162,6 +208,8 @@
       VItem,
       VCarousel,
       VCarouselItem,
+      VCheckboxGroup,
+      VCheckbox,
     },
     setup () {
       const selected = ref(null)
@@ -173,6 +221,7 @@
       const staticValue = ref('two')
       const items = ref([1, 2, 3])
       const dynamic = ref(null)
+      const checkboxes = ref(['one'])
 
       return {
         selected,
@@ -184,8 +233,13 @@
         staticValue,
         items,
         dynamic,
+        checkboxes,
         insert: () => items.value.splice(2, 0, 10),
         remove: () => items.value.splice(2, 1),
+        update: (v: any) => {
+          console.log('update', v)
+          checkboxes.value = v
+        },
       }
     },
   })

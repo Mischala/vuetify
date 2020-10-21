@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`group with explicit values should emit new selection 1`] = `
+<div>
+  <div class="selected">
+    one
+  </div>
+  <div class>
+    two
+  </div>
+</div>
+`;
+
+exports[`group with implicit values should emit new selection 1`] = `
+<div>
+  <div class="selected">
+  </div>
+  <div class>
+  </div>
+</div>
+`;
