@@ -53,6 +53,12 @@ You can specify the specific properties within your items array correspond to th
 
 <example file="v-select/prop-custom-text-and-value" />
 
+#### Headers and Dividers
+
+You can add **header** and **divider** elements to **items** to segment items in the list
+
+<example file="v-select/header-divider" />
+
 #### Dense
 
 You can use **dense** prop to reduce the field height and lower max height of list items.
